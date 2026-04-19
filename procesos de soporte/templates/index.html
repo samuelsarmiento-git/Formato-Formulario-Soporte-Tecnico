@@ -14,6 +14,8 @@
         @keyframes scaleIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Ajuste para que el modal no se corte en celulares */
+        #success-modal > div { max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-10 font-sans text-slate-900">
@@ -215,24 +217,38 @@
             }, 3000);
         }
 
+        // Lógica de Envío Mejorada para Móvil y PC
         document.getElementById('soporte-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // 1. Validar Checkboxes
             const checks = document.querySelectorAll('input[name="servicios"]:checked');
             if(checks.length === 0) {
-                document.getElementById('error-text').innerText = "Seleccione la incidencia que presenta su equipo, si no la encuentra, escoger la mas similar y especificar en seccion Observaciones";
+                document.getElementById('error-text').innerText = "Seleccione al menos una incidencia.";
                 document.getElementById('error-modal').classList.remove('hidden');
                 return;
             }
-            if(!this.checkValidity()) return;
+
+            // 2. Reportar validación HTML5 (Zoom en campos vacíos en móvil)
+            if(!this.checkValidity()) {
+                this.reportValidity();
+                return;
+            }
 
             const btn = document.getElementById('btn-submit');
+            const originalText = btn.innerText;
             btn.innerText = "PROCESANDO REGISTRO...";
             btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
 
             const formData = new FormData(this);
+            
             try {
                 const res = await fetch('/enviar', { method: 'POST', body: formData });
+                if (!res.ok) throw new Error('Servidor ocupado o sin conexión');
+                
                 const data = await res.json();
+                
                 if(data.status === "success") {
                     globalData = {
                         ticket: data.ticket,
@@ -249,12 +265,25 @@
                         obs: formData.get('observaciones') || "Sin observaciones.",
                         servicios: Array.from(checks).map(c => c.value)
                     };
+                    
                     document.getElementById('ticket-title').innerText = data.ticket;
                     document.getElementById('fecha-envio').innerText = data.fecha;
                     document.getElementById('form-container').classList.add('hidden');
                     document.getElementById('success-modal').classList.remove('hidden');
+                    window.scrollTo(0, 0); // Vital para móviles
+                } else {
+                    throw new Error(data.message || 'Error en el servidor');
                 }
-            } catch (err) { alert("Error de red"); btn.disabled = false; }
+            } catch (err) { 
+                console.error(err);
+                document.getElementById('error-text').innerText = "Error al enviar: " + err.message;
+                document.getElementById('error-modal').classList.remove('hidden');
+                
+                // Reactivar botón para reintento
+                btn.innerText = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         });
 
         function generarPDF() {
