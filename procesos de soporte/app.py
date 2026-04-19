@@ -1,3 +1,4 @@
+import os
 import random
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
@@ -7,9 +8,11 @@ from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 
-# Configuración
+# --- CONFIGURACIÓN SEGURA ---
 MI_CORREO = "samueldavidsarmientorodriguez@gmail.com"
-MI_PASSWORD = "gigueecaskiobyto" 
+
+# Esta línea busca la variable en Render; si no existe (local), usa clave actual
+MI_PASSWORD = os.environ.get('EMAIL_PASS', 'gigueecaskiobyto') 
 
 @app.route('/')
 def index():
@@ -76,7 +79,7 @@ def enviar():
         msg_admin.attach(MIMEText(cuerpo_html, 'html'))
         server.send_message(msg_admin)
 
-        # 2. Copia para el Usuario (OJO: Aquí se le envía al cliente)
+        # 2. Copia para el Usuario
         msg_user = MIMEMultipart()
         msg_user['Subject'] = f"Copia de tu Orden de Servicio - {ticket_id}"
         msg_user['From'] = MI_CORREO
