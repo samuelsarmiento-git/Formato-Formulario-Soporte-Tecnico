@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte Técnico - Registro de Orden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .hidden { display: none; }
+        .modal-blur { backdrop-filter: blur(12px); }
+        .scale-in { animation: scaleIn 0.3s ease-out; }
+        @keyframes scaleIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-10 font-sans text-slate-900">
+
+    <div id="form-container" class="max-w-6xl mx-auto bg-white shadow-2xl rounded-[3rem] overflow-hidden border-t-[14px] border-blue-900 scale-in">
+        <div class="p-10 border-b border-slate-100 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-black text-blue-900 tracking-tighter uppercase leading-none">Soporte Técnico</h1>
+                <p class="text-slate-400 font-bold text-xs tracking-[0.3em] mt-2">ORDEN DE SERVICIO DIGITAL</p>
+            </div>
+            <div class="text-right hidden md:block">
+                <span class="text-[10px] font-black text-slate-300 uppercase">Versión 2026.4</span>
+            </div>
+        </div>
+
+        <form id="soporte-form" class="p-10 space-y-16" novalidate>
+            
+            <section class="space-y-8">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-blue-900 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">1</span>
+                    <h2 class="text-lg font-black text-blue-900 uppercase">Información del Solicitante</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Nombre Completo</label><input type="text" name="nombre" class="p-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-600 transition-all" required></div>
+                    <div class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Área / Dependencia</label><input type="text" name="area" class="p-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-600 transition-all" required></div>
+                    <div class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Teléfono</label><input type="tel" name="telefono" class="p-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-600 transition-all" required></div>
+                    <div class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Correo Electrónico</label><input type="email" name="correo" class="p-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-600 transition-all" required placeholder="usuario@correo.com"></div>
+                </div>
+            </section>
+
+            <section class="space-y-8">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-blue-900 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">2</span>
+                    <h2 class="text-lg font-black text-blue-900 uppercase">Especificaciones del Equipo</h2>
+                </div>
+                <div class="bg-slate-50/50 p-8 rounded-[2.5rem] border-2 border-slate-100 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                    <div class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Tipo</label><select name="tipo_maquina" id="tipo_maquina" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm" onchange="toggleCamposEquipo()"><option value="Portátil / Laptop">Laptop</option><option value="De escritorio">Escritorio</option></select></div>
+                    <div id="div-marca" class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Marca</label><select name="marca" id="marca" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm" onchange="actualizarSeries()" required><option value="">Marca...</option><option value="Lenovo">Lenovo</option><option value="ASUS">ASUS</option><option value="HP">HP</option><option value="Dell">Dell</option><option value="Apple">Apple</option><option value="Otro">Otro</option></select></div>
+                    <div id="div-serie" class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Modelo</label><select name="serie" id="serie" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm" required><option value="">Modelo...</option></select></div>
+                    <div id="div-ram" class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">RAM</label><select name="ram" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm"><option value="8GB">8 GB</option><option value="12GB">12 GB</option><option value="16GB">16 GB</option><option value="24GB">24 GB</option><option value="32GB">32 GB</option><option value="64GB">64 GB</option></select></div>
+                    <div id="div-almacenamiento" class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Disco</label><select name="almacenamiento" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm"><option value="256GB SSD">256GB SSD</option><option value="512GB SSD">512GB SSD</option><option value="1TB SSD">1 TB SSD</option><option value="2TB SSD">2 TB SSD</option></select></div>
+                    <div id="div-serial" class="flex flex-col"><label class="text-[10px] font-black text-slate-400 mb-2 uppercase">Serial</label><input type="text" name="serial" id="serial" class="p-4 border-2 border-white rounded-2xl outline-none focus:border-blue-600 shadow-sm" required placeholder="S/N"></div>
+                </div>
+            </section>
+
+            <section class="space-y-8">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-blue-900 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">3</span>
+                    <h2 class="text-lg font-black text-blue-900 uppercase">Solución Solicitada</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-[2.5rem] border-2 border-slate-100">
+                        <h3 class="font-black text-blue-600 text-[10px] uppercase mb-5 tracking-widest">Soporte Técnico</h3>
+                        <div class="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scroll">
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Lentitud" class="w-4 h-4 accent-blue-900"><span>Lentitud de Sistema</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="BlueScreen" class="w-4 h-4 accent-blue-900"><span>Pantallazo Azul (BSOD)</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Calor" class="w-4 h-4 accent-blue-900"><span>Sobrecalentamiento</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Ruido" class="w-4 h-4 accent-blue-900"><span>Ruido de Ventilador</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="WiFi" class="w-4 h-4 accent-blue-900"><span>Falla WiFi / Internet</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Teclado" class="w-4 h-4 accent-blue-900"><span>Falla de Teclado</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Puertos" class="w-4 h-4 accent-blue-900"><span>Puertos USB Dañados</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Bateria" class="w-4 h-4 accent-blue-900"><span>Batería no retiene carga</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Pantalla" class="w-4 h-4 accent-blue-900"><span>Pantalla rota / Rayas</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Apagado" class="w-4 h-4 accent-blue-900"><span>Se apaga repentinamente</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Sonido" class="w-4 h-4 accent-blue-900"><span>No tiene audio</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Webcam" class="w-4 h-4 accent-blue-900"><span>Cámara no funciona</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Encendido" class="w-4 h-4 accent-blue-900"><span>No enciende</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="BIOS" class="w-4 h-4 accent-blue-900"><span>Error de BIOS / Logo</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Cargador" class="w-4 h-4 accent-blue-900"><span>Falla de Cargador</span></label>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-[2.5rem] border-2 border-slate-100">
+                        <h3 class="font-black text-blue-600 text-[10px] uppercase mb-5 tracking-widest">Recuperación y Mant.</h3>
+                        <div class="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scroll">
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Limpieza" class="w-4 h-4 accent-blue-900"><span>Limpieza Interna (Polvo)</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Pasta" class="w-4 h-4 accent-blue-900"><span>Cambio Pasta Térmica</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Data" class="w-4 h-4 accent-blue-900"><span>Recuperación de Datos</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Backup" class="w-4 h-4 accent-blue-900"><span>Copia de Seguridad</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Virus" class="w-4 h-4 accent-blue-900"><span>Limpieza de Virus</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Optimizar" class="w-4 h-4 accent-blue-900"><span>Optimización de Arranque</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="SSDUpgrade" class="w-4 h-4 accent-blue-900"><span>Migración a SSD</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Contraseña" class="w-4 h-4 accent-blue-900"><span>Quitar clave de Windows</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Drivers" class="w-4 h-4 accent-blue-900"><span>Actualizar Controladores</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="ActualizarW" class="w-4 h-4 accent-blue-900"><span>Actualización Sistema</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="MantoE" class="w-4 h-4 accent-blue-900"><span>Mantenimiento Preventivo</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Bisagras" class="w-4 h-4 accent-blue-900"><span>Ajuste de Bisagras</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Fisico" class="w-4 h-4 accent-blue-900"><span>Reparación de Carcasa</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Temp" class="w-4 h-4 accent-blue-900"><span>Borrar Archivos Temporales</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Salud" class="w-4 h-4 accent-blue-900"><span>Diagnóstico General</span></label>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-[2.5rem] border-2 border-slate-100">
+                        <h3 class="font-black text-blue-600 text-[10px] uppercase mb-5 tracking-widest">Instalación Programas</h3>
+                        <div class="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scroll">
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Windows" class="w-4 h-4 accent-blue-900"><span>Formateo Windows 10/11</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Office" class="w-4 h-4 accent-blue-900"><span>Microsoft Office</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Adobe" class="w-4 h-4 accent-blue-900"><span>Adobe Master Collection</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Antivirus" class="w-4 h-4 accent-blue-900"><span>Antivirus Pro</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="AutoCAD" class="w-4 h-4 accent-blue-900"><span>AutoCAD / Diseño</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Navegadores" class="w-4 h-4 accent-blue-900"><span>Chrome / Firefox / Opera</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="PDF" class="w-4 h-4 accent-blue-900"><span>Lector / Editor PDF</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Java" class="w-4 h-4 accent-blue-900"><span>Java Runtime / SDK</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="AndroidStudio" class="w-4 h-4 accent-blue-900"><span>Android Studio</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Winrar" class="w-4 h-4 accent-blue-900"><span>Compresores (WinRAR)</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Reproductores" class="w-4 h-4 accent-blue-900"><span>Codecs de Video / VLC</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Zoom" class="w-4 h-4 accent-blue-900"><span>Zoom / Teams / Meet</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="Impresora" class="w-4 h-4 accent-blue-900"><span>Controladores Impresora</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="VPN" class="w-4 h-4 accent-blue-900"><span>Software de VPN</span></label>
+                            <label class="flex items-center space-x-3 text-[11px] font-bold text-slate-600"><input type="checkbox" name="servicios" value="OtrosProg" class="w-4 h-4 accent-blue-900"><span>Utilidades Varias</span></label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="space-y-8">
+                <div class="flex items-center space-x-4">
+                    <span class="bg-blue-900 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">4</span>
+                    <h2 class="text-lg font-black text-blue-900 uppercase">Observaciones</h2>
+                </div>
+                <textarea name="observaciones" rows="4" class="w-full p-8 border-2 border-slate-100 rounded-[2.5rem] outline-none focus:border-blue-600 resize-none font-medium text-sm" placeholder="Especifique detalles técnicos adicionales aquí..."></textarea>
+            </section>
+
+            <button type="submit" id="btn-submit" class="w-full bg-blue-900 hover:bg-black text-white font-black py-9 rounded-[3rem] shadow-2xl transition-all duration-500 text-2xl uppercase tracking-[0.4em]">Registrar Orden</button>
+        </form>
+    </div>
+
+    <div id="success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur bg-blue-950/40 p-4">
+        <div class="bg-white w-full max-w-xl p-12 rounded-[4rem] shadow-2xl border-b-[16px] border-blue-600 text-center scale-in">
+            <div class="text-7xl mb-4">✅</div>
+            <h2 id="ticket-title" class="text-3xl font-black text-blue-900 uppercase">ORDEN REGISTRADA</h2>
+            <p id="fecha-envio" class="text-xs font-black text-blue-400 uppercase tracking-widest mt-2 mb-10">--</p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button onclick="generarPDF()" class="flex-1 bg-red-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest hover:bg-red-700 shadow-lg">Descargar Orden</button>
+                <button onclick="mostrarGratitud()" class="flex-1 bg-blue-900 text-white font-black py-5 rounded-2xl uppercase tracking-widest hover:bg-black">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gratitud-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur bg-blue-950/60 p-4">
+        <div class="bg-white w-full max-w-lg p-10 rounded-[3rem] text-center shadow-2xl scale-in">
+            <div class="text-5xl mb-6">🤝</div>
+            <h2 class="text-xl font-black text-blue-900 uppercase mb-4 leading-tight">Gracias por la confianza en el servicio técnico</h2>
+            <p class="text-slate-500 font-bold text-xs uppercase mb-10 tracking-widest">Nos contactaremos pronto con usted</p>
+            <div class="flex flex-col gap-4">
+                <button onclick="location.reload()" class="w-full bg-slate-100 text-blue-900 font-black py-5 rounded-2xl uppercase tracking-widest hover:bg-blue-200 transition-colors">Registrar otra orden</button>
+                <button onclick="cerrarSistema()" class="w-full bg-blue-900 text-white font-black py-5 rounded-2xl uppercase tracking-widest hover:bg-black transition-all">Finalizar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="closing-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-500 mb-6"></div>
+            <h2 class="text-white text-3xl font-black uppercase tracking-widest">Finalizando sesión</h2>
+            <p class="text-blue-400 font-bold mt-2 italic">Cerrando pestaña automáticamente...</p>
+        </div>
+    </div>
+
+    <div id="error-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-blur bg-red-950/40 p-4">
+        <div class="bg-white w-full max-w-md p-10 rounded-[3rem] text-center border-b-8 border-red-600 scale-in">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h2 class="text-xl font-black text-red-600 uppercase mb-4">Atención</h2>
+            <p id="error-text" class="text-slate-500 font-bold text-xs uppercase leading-relaxed mb-8"></p>
+            <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl uppercase tracking-widest">Corregir</button>
+        </div>
+    </div>
+
+    <script>
+        const marcasDB = {"Lenovo":["LOQ","Legion","IdeaPad","ThinkPad"],"ASUS":["ROG","TUF Gaming","Zenbook","Vivobook"],"HP":["Victus","Omen","Pavilion","EliteBook"],"Dell":["Alienware","XPS","Latitude","Inspiron"],"Apple":["MacBook Air","MacBook Pro"],"Otro":["Ensamblado"]};
+        let globalData = {};
+
+        function actualizarSeries() {
+            const m = document.getElementById('marca').value;
+            const s = document.getElementById('serie');
+            s.innerHTML = '<option value="">Modelo...</option>';
+            if(marcasDB[m]) marcasDB[m].forEach(v => { const o = document.createElement('option'); o.value=v; o.innerText=v; s.appendChild(o); });
+        }
+
+        function toggleCamposEquipo() {
+            const esEsc = document.getElementById('tipo_maquina').value === "De escritorio";
+            ['marca','serie','serial'].forEach(id => {
+                const el = document.getElementById(id);
+                if(esEsc) { el.removeAttribute('required'); el.parentElement.classList.add('opacity-30','pointer-events-none'); }
+                else { el.setAttribute('required',''); el.parentElement.classList.remove('opacity-30','pointer-events-none'); }
+            });
+        }
+
+        function mostrarGratitud() {
+            document.getElementById('success-modal').classList.add('hidden');
+            document.getElementById('gratitud-modal').classList.remove('hidden');
+        }
+
+        function cerrarSistema() {
+            document.getElementById('gratitud-modal').classList.add('hidden');
+            document.getElementById('closing-modal').classList.remove('hidden');
+            setTimeout(() => {
+                window.close();
+                window.location.href = "about:blank";
+            }, 3000);
+        }
+
+        document.getElementById('soporte-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const checks = document.querySelectorAll('input[name="servicios"]:checked');
+            if(checks.length === 0) {
+                document.getElementById('error-text').innerText = "Seleccione la incidencia que presenta su equipo, si no la encuentra, escoger la mas similar y especificar en seccion Observaciones";
+                document.getElementById('error-modal').classList.remove('hidden');
+                return;
+            }
+            if(!this.checkValidity()) return;
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "PROCESANDO REGISTRO...";
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            try {
+                const res = await fetch('/enviar', { method: 'POST', body: formData });
+                const data = await res.json();
+                if(data.status === "success") {
+                    globalData = {
+                        ticket: data.ticket,
+                        fecha: data.fecha,
+                        nombre: formData.get('nombre'),
+                        area: formData.get('area'),
+                        tel: formData.get('telefono'),
+                        email: formData.get('correo'),
+                        tipo: formData.get('tipo_maquina'),
+                        hardware: `${formData.get('marca') || ''} ${formData.get('serie') || ''}`,
+                        ram: formData.get('ram'),
+                        disco: formData.get('almacenamiento'),
+                        sn: formData.get('serial') || 'N/A',
+                        obs: formData.get('observaciones') || "Sin observaciones.",
+                        servicios: Array.from(checks).map(c => c.value)
+                    };
+                    document.getElementById('ticket-title').innerText = data.ticket;
+                    document.getElementById('fecha-envio').innerText = data.fecha;
+                    document.getElementById('form-container').classList.add('hidden');
+                    document.getElementById('success-modal').classList.remove('hidden');
+                }
+            } catch (err) { alert("Error de red"); btn.disabled = false; }
+        });
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = jsPDF();
+            doc.setFillColor(30, 58, 138); doc.rect(0, 0, 210, 40, 'F');
+            doc.setTextColor(255); doc.setFontSize(22); doc.text("ORDEN DE SERVICIO TÉCNICO", 105, 20, { align: "center" });
+            doc.setFontSize(14); doc.text(`TICKET: ${globalData.ticket}`, 105, 30, { align: "center" });
+
+            doc.autoTable({
+                startY: 50,
+                head: [['INFORMACIÓN SOLICITANTE', '']],
+                body: [['Nombre:', globalData.nombre],['Área:', globalData.area],['Contacto:', `${globalData.tel} / ${globalData.email}`]],
+                theme: 'striped', headStyles: { fillColor: [30, 58, 138] }
+            });
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 10,
+                head: [['DETALLES DEL EQUIPO', '']],
+                body: [['Tipo:', globalData.tipo],['Hardware:', globalData.hardware],['RAM/Disco:', `${globalData.ram} / ${globalData.disco}`],['Serial:', globalData.sn]],
+                theme: 'grid', headStyles: { fillColor: [30, 58, 138] }
+            });
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 10,
+                head: [['SERVICIOS SOLICITADOS']],
+                body: globalData.servicios.map(s => [s]),
+                theme: 'striped', headStyles: { fillColor: [30, 58, 138] }
+            });
+
+            doc.save(`Orden_${globalData.ticket}.pdf`);
+        }
+    </script>
+</body>
+</html>
